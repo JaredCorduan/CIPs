@@ -8,7 +8,7 @@ Authors:
     - Matthias Benkort <matthias.benkort@cardanofoundation.org>
     - Kevin Hammond <kevin.hammond@iohk.io>
     - Charles Hoskinson <charles.hoskinson@iohk.io>
-    - Samuel Leathers<samuel.leathers@iohk.io>
+    - Samuel Leathers <samuel.leathers@iohk.io>
 Discussions:
     - https://github.com/cardano-foundation/cips/pulls/?
 Created: 2022-11-18
