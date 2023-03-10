@@ -10,7 +10,7 @@ Authors:
     - Charles Hoskinson <charles.hoskinson@iohk.io>
     - Samuel Leathers <samuel.leathers@iohk.io>
 Discussions:
-    - https://github.com/cardano-foundation/cips/pulls/?
+    - https://github.com/cardano-foundation/CIPs/pull/380
 Created: 2022-11-18
 License: CC-BY-4.0
 ---
