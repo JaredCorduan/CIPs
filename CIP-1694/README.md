@@ -469,7 +469,7 @@ SPOs are chosen purely for block production.
 Voters can choose to delegate their vote to DReps without needing to consider whether they are
 also a good block producer.
 
-### AVST (action voting stake threshold)
+### AVST (active voting stake threshold)
 
 The AVST exists to ensure that the votes of the DReps are meaningful.
 For example, if only 10 Lovelace were properly delegated to DReps, and 9 Lovelace "vote yes" to
