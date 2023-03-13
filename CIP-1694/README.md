@@ -298,7 +298,7 @@ Each vote transaction consists of the following:
 * a yes/no/abstain vote.
 
 Note that "abstained" votes are not included in the "active voting stake".
-Note also that a vote to abstain is different than abstaining from voting
+Note also that a vote to Abstain is different from being absent from voting.
 (the former is visible on chain, the latter is not).
 To avoid confusion, we will only use the word "abstain" from this point onward to mean a vote
 to abstain.
