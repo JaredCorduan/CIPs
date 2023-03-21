@@ -46,11 +46,11 @@ We also introduce three distinct governance bodies that have specific functions 
 Every governance action must be ratified by two of these three governance bodies using their on-chain **votes**.
 The type of action and the state of the governance system determines which bodies must ratify it.
 
-Ratified actions may then be **enacted** on-chain, following a set of well-defined rules.
+Ratified actions are then **enacted** on-chain, following a set of well-defined rules.
 
 As with stake pools, any Ada holder may register to be a DRep and so choose to
 represent themselves and/or others.  Also, as with stake pools, Ada holders may, instead, delegate their voting
-rights to any other registered DRep.
+rights to any other DRep.
 Voting rights will be based on the total Ada that is delegated, as a whole number of Lovelace.
 
 The most crucial aspect of this proposal is therefore the notion of **"one Lovelace = one vote"**.
@@ -136,8 +136,8 @@ The on-chain Cardano governance mechanism that was introduced in the Shelley led
 In the current scheme, governance actions are initiated by special transactions that require `Quorum-Many` authorizations
 from the governance keys (5 out of 7 on the Cardano mainnet)[^1].
 Fields in the transaction body provide details of the proposed governance action:
-either i) changing protocol parameter changes; or ii) initiating funds transfers.
-Each transaction can trigger precisely one kind of governance action. However, a single action can have more than one effect (e.g. changing two or more protocol parameters).
+either i) protocol parameter changes; or ii) initiating funds transfers.
+Each transaction can trigger both kinds of governance actions, and a single action can have more than one effect (e.g. changing two or more protocol parameters).
 
 - Protocol parameter updates use [transaction field nº6](https://github.com/input-output-hk/cardano-ledger/blob/8884d921c8c3c6e216a659fca46caf729282058b/eras/babbage/test-suite/cddl-files/babbage.cddl#L56) of the transaction body.
 - Movements of the treasury and the reserves use [Move Instantaneous Rewards (abbrev. MIR) certificates](https://github.com/input-output-hk/cardano-ledger/blob/8884d921c8c3c6e216a659fca46caf729282058b/eras/babbage/test-suite/cddl-files/babbage.cddl#L180).
@@ -294,6 +294,7 @@ It may be changed whenever a new committee is elected ("New constitutional commi
 Likewise, the committee _quorum_ (the number of committee `Yes` votes that are required to ratify governance actions) is not fixed and
 can also be varied by the governance action.
 This gives a great deal of flexibility to the composition of the committee.
+In particular, it is possible to elect an empty committee if the community wishes to abolish the constitutional committee entirely. Note that this is different from a state of no-confidence and still constitutes a governance system capable of enacting proposals.
 
 #### Term limits
 
@@ -500,7 +501,7 @@ Depending on the type of governance action, an action will thus be ratified when
 * the SPOs approve of the action (the stake controlled by the SPOs who vote 'Yes' meets a certain threshold over the total registered voting stake)
 
 > **Warning**
-> As explained below, different stake distributions apply to DReps and SPOs.
+> As explained above, different stake distributions apply to DReps and SPOs.
 
 ##### Requirements
 
@@ -594,11 +595,7 @@ All submitted governance actions will therefore either:
 2. be **ratified**, yet **dropped** as a result of some higher priority action
 3. **expire** after a number of epochs
 
-Deposits are returned immediately when either:
-
-1. a ratified action is **enacted**
-2. the action **expires**
-3. a ratified action is **dropped**
+In all of those cases, deposits are returned immediately.
 
 Some actions will be enacted _immediately_ (i.e. at the same epoch boundary they are ratified), others are enacted only on _the following epoch boundary_.
 
@@ -635,7 +632,7 @@ In addition, each action will include some elements that are specific to its typ
 | 4. Hard-fork initiation        | The new (greater) major protocol version                      |
 | 5. Protocol parameters changes | The changed parameters                                        |
 | 6. Treasury withdrawal         | A map from stake credentials to a positive number of Lovelace |
-| 7. Info                        |                                                               |
+| 7. Info                        | None                                                          |
 
 > **Warning**
 > For treasury withdrawals, there will be upper and lower thresholds on the amount: the withdrawal threshold is the **total** amount of Lovelace that is withdrawn by the action, not the amount of any single withdrawal if the action specifies more than one withdrawal.
@@ -645,10 +642,11 @@ In addition, each action will include some elements that are specific to its typ
 > Any two consecutive epochs will therefore either have the same major protocol version, or the
 > later one will have a major protocol version that is one greater.
 
-Each  governance action that is accepted on the chain will be assigned a unique identifier (a.k.a. the **governance action ID**),
-consisting of the transaction hash that created it and the index within the transaction body that points to it.
+> **Note**
+> There can be no duplicate committee members - each pair of credentials in a committee must be unique.
 
-> ** Note: There can be no duplicate committee members - each pair of credentials in a committee must be unique.
+Each governance action that is accepted on the chain will be assigned a unique identifier (a.k.a. the **governance action ID**),
+consisting of the transaction hash that created it and the index within the transaction body that points to it.
 
 #### Protocol Parameter groups
 
@@ -667,6 +665,7 @@ The **network group** consists of:
 * maximum size of a serialized asset value (`maxValSize`)
 * maximum script execution units in a single transaction (`maxTxExUnits`)
 * maximum script execution units in a single block (`maxBlockExUnits`)
+* maximum number of collateral inputs (`maxCollateralInputs`)
 
 The **economic group** consists of:
 * minimum fee coefficient (`minFeeA`)
@@ -684,7 +683,6 @@ The **technical group** consists of:
 * pool retirement maximum epoch (`eMax`)
 * desired number of pools (`nOpt`)
 * Plutus execution cost models (`costModels`)
-* maximum number of collateral inputs (`maxCollateralInputs`)
 * proportion of collateral needed for scripts (`collateralPercentage`)
 
 The **governance group** consists of all the new protocol parameters that are introduced in this CIP:
@@ -721,18 +719,18 @@ Votes from unregistered SPOs or DReps count as having zero stake.
 
 > **Warning** 'Abstain' votes are not included in the "active voting stake".
 >
-> Note that an explicit vote to abstain differs from abstaining from voting
-> (the former is visible on chain, the latter is not).
+> Note that an explicit vote to abstain differs from abstaining from voting.
+> Unregistered stake that did not vote behaves like an 'Abstain' vote,
+> while registered stake that did not vote behaves like a 'No' vote.
 > To avoid confusion, we will only use the word 'Abstain' from this point onward to mean an on-chain vote to abstain.
 
-The governance credential witness will trigger the appropriate verifications in the ledger according to the existing `UTxOW` ledger rule.
+The governance credential witness will trigger the appropriate verifications in the ledger according to the existing `UTxOW` ledger rule
 (i.e. a signature check for verification keys, and a validator execution with a specific vote redeemer and new Plutus purpose for scripts).
 
 Votes can be cast multiple times for each governance action by a single credential.
 Correctly submitted votes override any older votes for the same credential and role.
 That is, the voter may change their position on any action if they choose.
-As soon as a governance action is ratified, voting ends.
-No further votes are considered or recorded (whether they are 'Yes', 'No' or 'Abstain').
+As soon as a governance action is ratified, voting ends and transactions containing further votes are invalid.
 
 #### Governance state
 
@@ -762,17 +760,8 @@ We define a number of new terms related to voting stake:
   * It contains a registered stake credential.
   * The registered stake credential has delegated its voting rights to a registered DRep.
 * Relative to some percentage `P`, a DRep (SPO) **vote threshold has been met** if the sum of the relative stake that has been delegated to the DReps (SPOs)
-  that vote 'Yes' to a governance action minus the sum of the relative stake that has been delegated to the DReps (SPOs) that vote 'No' to the governance action
+  that vote 'Yes' to a governance action
   is at least `P`.
-
-> **Note**
->
-> There are several alternative definitions for "the total stake in circulation":
->  1. The sum of the UTxO and the rewards accounts.
->  2. The sum of the UTxO, the rewards accounts, the fee pot, and the deposit pot.
->  3. The total Ada supply (i.e. 45 billion Ada) minus the reserves[^3].
->
->  For now, we leave this choice open for discussion.
 
 ## Rationale
 
@@ -897,7 +886,7 @@ Regardless of any governance mechanism, SPO participation is needed for any hard
 For this reason, we make their cooperation explicit in the hard fork initiation governance action,
 by always requiring their vote.
 The constitutional committee also votes, signaling the constitutionality of a hard fork.
-The DReps also vote, to represent the will of every stake holder
+The DReps also vote, to represent the will of every stake holder.
 
 ### New Metadata structures
 
@@ -905,8 +894,6 @@ Both the governance actions and the votes use new metadata fields,
 in the form of URLs and integrity hashes
 (mirroring the metadata structure for stake pool registration).
 The metadata is used to provide context.
-For example, votes by the constitutional committee need an explanation as to why they are in line with
-the constitution.
 Governance actions need to explain why the action is needed,
 what experts were consulted, etc.
 Since transaction size constraints should not limit this explanatory data,
@@ -914,7 +901,7 @@ we use URLs instead.
 
 This does, however, introduce new problems.
 If a URL does not resolve, what should be the expectation for voting on that action?
-Should we expect everyone to vote 'Abstain'?.
+Should we expect everyone to vote 'No'?
 Is this an attack vector against the governance system?
 In such a scenario, the hash pre-image could be communicated in other ways, but we should be
 prepared for the situation.
@@ -1023,11 +1010,14 @@ The final ratification process is likely to be a blend of various ideas, such as
 
 * The `PPUP` transition rule will be rewritten and moved out of the `UTxO` rule and into the `LEDGER` rule as a new `TALLY` rule.
 
-  It will process the governance actions and the votes, ratify them, and stage governance actions for enactment in the current or next epoch, as appropriate.
+  It will process and record the governance actions and votes.
 
 * The `NEWEPOCH` transition rule will be modified.
 * The `MIR` sub-rule will be removed.
 * A new `RATIFY` rule will be introduced to stage governance actions for enactment.
+
+  It will ratify governance actions, and stage them for enactment in the current or next epoch, as appropriate.
+
 * A new `ENACTMENT` rule will be called immediately after the `EPOCH` rule. This rule will enact governance actions that have previously been ratified.
 * The `EPOCH` rule will no longer call the `NEWPP` sub-rule or compute whether the quorum is met on the PPUP state.
 
