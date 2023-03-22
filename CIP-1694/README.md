@@ -109,7 +109,7 @@ to this CIP, and for their active championing of Cardano's vision for minimal vi
 ## Motivation: why is this CIP necessary?
 
 + [Goal](#goal)
-+ [Current design](#current-design)
++ [Current design](#current-governance-mechanism-design)
 + [Shortcomings of the Shelley governance design](#shortcomings-of-the-shelley-governance-design)
 + [Out of scope](#out-of-scope)
 
@@ -205,8 +205,8 @@ How any private companies, public or private institutions,  individuals etc. cho
 + [The Cardano Constitution](#the-cardano-constitution)
 + [The constitutional committee](#the-constitutional-committee)
   - [State of no-confidence](#state-of-no-confidence)
-  - [Initial committee](#initial-constitutional-committee)
-  - [Replacing the committee](#replacing-the-committee)
+  - [Constitutional committee keys](#constitutional-committee-keys)
+  - [Replacing the constitutional committee](#replacing-the-constitutional-committee)
   - [Size of the constitutional committee](#size-of-the-constitutional-committee)
   - [Term limits](#term-limits)
 + [Delegated representatives (DReps)](#delegated-representatives-dreps)
@@ -214,7 +214,7 @@ How any private companies, public or private institutions,  individuals etc. cho
   - [Registered DReps](#registered-dreps)
   - [New stake distribution for DReps](#new-stake-distribution-for-dreps)
   - [Incentives for Ada holders to delegate voting stake](#incentives-for-ada-holders-to-delegate-voting-stake)
-  - [DReps incentives](#dreps-incentives)
+  - [DRep incentives](#drep-incentives)
 + [Governance actions](#governance-actions)
   - [Ratification](#ratification)
     * [Requirements](#requirements)
@@ -222,12 +222,11 @@ How any private companies, public or private institutions,  individuals etc. cho
   - [Enactment](#enactment)
   - [Lifecycle](#lifecycle)
   - [Content](#content)
-  - [Protocol parameters groups](#protocol-parameters-groups)
+  - [Protocol parameter groups](#protocol-parameter-groups)
 + [Votes](#votes)
   - [Governance state](#governance-state)
-  - [Stale votes](#stale-votes)
   - [Changes to the stake snapshot](#changes-to-the-stake-snapshot)
-  - [Definitions surrounding voting stake](#definitions-surrounding-voting-stake)
+  - [Definitions relating to voting stake](#definitions-relating-to-voting-stake)
 
 ### The Cardano Constitution
 
