@@ -290,8 +290,8 @@ This might happen, for example, if the electorate has collective confidence in a
 #### Size of the constitutional committee
 
 Unlike the Shelley governance design, the size of the constitutional committee is not fixed and can be any nonnegative number.
-It may be changed whenever a new committee is elected ("New constitutional committee and/or quorum size").
-Likewise, the committee _quorum_ (the number of committee `Yes` votes that are required to ratify governance actions) is not fixed and
+It may be changed whenever a new committee is elected ("New constitutional committee and/or threshold").
+Likewise, the committee threshold (the fraction of committee `Yes` votes that are required to ratify governance actions) is not fixed and
 can also be varied by the governance action.
 This gives a great deal of flexibility to the composition of the committee.
 In particular, it is possible to elect an empty committee if the community wishes to abolish the constitutional committee entirely. Note that this is different from a state of no-confidence and still constitutes a governance system capable of enacting proposals.
@@ -302,11 +302,11 @@ Each newly elected constitutional committee will have a term limit.
 The system will automatically enter a state of no-confidence when the term limit for the constitutional
 committee expires.  This limit is a governance protocol parameter, which specifies the maximum number of epochs
 during which the committee can ratify governance actions.  When the committee term limit expires, all governance
-actions other than a "Motion of no-confidence" will be **dropped**, and a new committee must be elected.
+actions will be **dropped** and the protocol enters a state of no confidence.
 This means that the committee should plan for its own replacement if it wishes to avoid disruption.
 
-The term limit will reset whenever the  "New constitutional committee and/or quorum size" governance action is enacted, even if the same committee is re-elected
-and the quorum remains unchanged.  This allows Ada holders to confirm their confidence in the committee if they wish.
+The term limit will reset whenever the  "New constitutional committee and/or threshold" governance action is enacted, even if the same committee is re-elected
+and the threshold remains unchanged.  This allows Ada holders to confirm their confidence in the committee if they wish.
 Note that the term limit is calculated at the point the committee is elected.  Any change in the underlying protocol
 parameter only affects the term that applies to future committees, and does not change the term of the current committee.
 
@@ -356,10 +356,12 @@ that will vote on their behalf.  In addition, two pre-defined DRep options are a
 #### Registered DReps
 
 In Voltaire, existing stake credentials will be
-able to delegate their stake to registered DReps for voting purposes, in addition to the current delegation to stake pools
-for block production.
+able to delegate their stake to registered DReps for voting purposes,
+in addition to the current delegation to stake pools for block production.
 DRep delegation will mimic the existing stake delegation mechanisms (via on-chain certificates).
 Similarly, DRep registration will mimic the existing stake registration mechanisms.
+Additionally, registered DReps will need to vote regularly to still be considered active.
+Inactive DReps do not count towards the active voting stake anymore.
 
 Registered DReps are identified by a credential that can be either:
 
@@ -470,20 +472,21 @@ Regardless of whether they have been ratified, actions may, however, be **droppe
 for example, a motion of no confidence is enacted.
 
 
-| Action                                             | Description |
-| :---                                               | :--- |
-| 1. Motion of no-confidence                         | A motion to create a _state of no-confidence_ in the current constitutional committee |
-| 2. New constitutional committee and/or quorum size | Changes to the members of the constitutional committee and/or to its signature threshold |
-| 3. Updates to the Constitution                     | A modification to the off-chain Constitution, recorded as an on-chain hash of the text document |
-| 4. Hard-Fork[^2] Initiation                        | Triggers a non-backwards compatible upgrade of the network; requires a prior software upgrade |
-| 5. Protocol Parameter Changes                      | Any change to one or more updatable protocol parameters, excluding changes to major protocol versions ("hard forks") |
-| 6. Treasury Withdrawals                            | Movements from the treasury, sub-categorized into small, medium or large withdrawals (based on the amount of Lovelace to be withdrawn). The thresholds for treasury withdrawals are discussed below. |
-| 7. Info                                            | An action that has no effect on-chain, other than an on-chain record. |
+| Action                                           | Description |
+| :---                                             | :--- |
+| 1. Motion of no-confidence                       | A motion to create a _state of no-confidence_ in the current constitutional committee |
+| 2. New constitutional committee and/or threshold | Changes to the members of the constitutional committee and/or to its signature threshold |
+| 3. Updates to the Constitution                   | A modification to the off-chain Constitution, recorded as an on-chain hash of the text document |
+| 4. Hard-Fork[^2] Initiation                      | Triggers a non-backwards compatible upgrade of the network; requires a prior software upgrade |
+| 5. Protocol Parameter Changes                    | Any change to one or more updatable protocol parameters, excluding changes to major protocol versions ("hard forks") |
+| 6. Treasury Withdrawals                          | Movements from the treasury, sub-categorized into small, medium or large withdrawals (based on the amount of Lovelace to be withdrawn). The thresholds for treasury withdrawals are discussed below. |
+| 7. Info                                          | An action that has no effect on-chain, other than an on-chain record. |
 
 **Any Ada holder** can submit a governance action to the chain.
 They must provide a deposit of `govDeposit` Lovelace, which will be returned when the action is finalized
 (whether it is **ratified**, has been **dropped**, or has **expired**).
 The deposit amount will be added to the _deposit pot_, similar to stake key deposits.
+It will also be counted towards the stake of the reward address it will be paid back to, to not reduce the submitter's voting power to vote on their own (and competing) actions.
 
 Note that a motion of no-confidence is an extreme measure that enables Ada holders to revoke the power
 that has been granted to the current constitutional committee.
@@ -493,15 +496,22 @@ will be dropped if the motion is enacted.
 #### Ratification
 
 Governance actions are **ratified** through on-chain voting actions.
-Different kinds of governance actions have different ratification requirements but always involve **two of the three** governance bodies.
+Different kinds of governance actions have different ratification requirements but always involve **two of the three** governance bodies,
+with the exception of a hard-fork initiation, which requires ratification by all governance bodies.
 Depending on the type of governance action, an action will thus be ratified when a combination of the following occurs:
 
-* the constitutional committee approves of the action (`quorum`-many members vote 'Yes')
-* the DReps approve of the action (the stake controlled by the DReps who vote 'Yes' meets a certain threshold of the total registered voting stake)
+* the constitutional committee approves of the action (the number of members who vote 'Yes' meet the threshold of the constitutional committee)
+* the DReps approve of the action (the stake controlled by the DReps who vote 'Yes' meets a certain threshold of the total active voting stake)
 * the SPOs approve of the action (the stake controlled by the SPOs who vote 'Yes' meets a certain threshold over the total registered voting stake)
 
 > **Warning**
 > As explained above, different stake distributions apply to DReps and SPOs.
+
+A successful election of a new constitutional committee, a constitutional change or a hard-fork delays
+ratification of all other governance actions until the first epoch after their enactment. This gives
+a new constitutional committee enough time to vote on current proposals, re-evaluate existing proposals
+with respect to a new constitution, and ensures that the in principle arbitrary semantic changes caused
+by enacting a hard-fork do not have unintended consequences in combination with other actions.
 
 ##### Requirements
 
@@ -511,7 +521,7 @@ The following table details the ratification requirements for each governance ac
   The type of governance action. Note that the protocol parameter updates are grouped into three categories.
 
 * **Constitutional committee (abbrev. CC)**<br/>
-  A value of ✓ indicates that `quorum`-many constitutional committee 'Yes' votes are required.<br/>
+  A value of ✓ indicates that the constitutional committee must approve this action.<br/>
   A value of - means that constitutional committee votes do not apply.
 
 * **DReps**<br/>
@@ -522,19 +532,19 @@ The following table details the ratification requirements for each governance ac
   The SPO vote threshold which must be met as a percentage of the stake held by all stake pools.<br/>
   A value of - means that SPO votes do not apply.
 
-| Governance action type                                         | CC   | DReps    | SPOs     |
-| :---                                                           | :--- | :---     | :---     |
-| 1. Motion of no-confidence                                     | \-   | $P_1$    | $Q_1$    |
-| 2<sub>a</sub>. New committee/quorum (_normal state_)           | ✓    | $P_{2a}$ | \-       |
-| 2<sub>b</sub>. New committee/quorum (_state of no-confidence_) | \-   | $P_{2b}$ | $Q_{2b}$ |
-| 3. Update to the Constitution                                  | ✓    | $P_3$    | \-       |
-| 4. Hard-fork initiation                                        | ✓    | $P_4$    | $Q_4$    |
-| 5<sub>a</sub>. Protocol parameter changes, network group       | ✓    | $P_{5a}$ | \-       |
-| 5<sub>b</sub>. Protocol parameter changes, economic group      | ✓    | $P_{5b}$ | \-       |
-| 5<sub>c</sub>. Protocol parameter changes, technical group     | ✓    | $P_{5c}$ | \-       |
-| 5<sub>d</sub>. Protocol parameter changes, governance group    | ✓    | $P_{5d}$ | \-       |
-| 6. Treasury withdrawal                                         | ✓    | $P_6$    | \-       |
-| 7. Info                                                        | ✓    | $P_7$    | \-       |
+| Governance action type                                            | CC   | DReps    | SPOs     |
+| :---                                                              | :--- | :---     | :---     |
+| 1. Motion of no-confidence                                        | \-   | $P_1$    | $Q_1$    |
+| 2<sub>a</sub>. New committee/threshold (_normal state_)           | ✓    | $P_{2a}$ | \-       |
+| 2<sub>b</sub>. New committee/threshold (_state of no-confidence_) | \-   | $P_{2b}$ | $Q_{2b}$ |
+| 3. Update to the Constitution                                     | ✓    | $P_3$    | \-       |
+| 4. Hard-fork initiation                                           | ✓    | $P_4$    | $Q_4$    |
+| 5<sub>a</sub>. Protocol parameter changes, network group          | ✓    | $P_{5a}$ | \-       |
+| 5<sub>b</sub>. Protocol parameter changes, economic group         | ✓    | $P_{5b}$ | \-       |
+| 5<sub>c</sub>. Protocol parameter changes, technical group        | ✓    | $P_{5c}$ | \-       |
+| 5<sub>d</sub>. Protocol parameter changes, governance group       | ✓    | $P_{5d}$ | \-       |
+| 6. Treasury withdrawal                                            | ✓    | $P_6$    | \-       |
+| 7. Info                                                           | ✓    | $P_7$    | \-       |
 
 Each of these thresholds is a governance parameter.
 The initial thresholds should be chosen by the Cardano community as a whole.
@@ -564,7 +574,7 @@ but they must be *deliberately* designed to do so.
 Actions that have been ratified in the current epoch are prioritized as follows for enactment:
 
 1. Motion of no-confidence
-2. New committee/quorum
+2. New committee/threshold
 3. Updates to the Constitution
 4. Hard Fork initiation
 5. Protocol parameter changes
@@ -573,11 +583,9 @@ Actions that have been ratified in the current epoch are prioritized as follows 
 
 > **Note** Enactment for _Info_ actions is a null action, since they do not have any effect on the protocol.
 
-Enactment of a successful _Motion of no-confidence_, the election of a new constitutional committee,
-or a constitutional change invalidates *all* other **not yet enacted** governance actions (whether or not they have been ratified),
+Enactment of a successful _Motion of no-confidence_ invalidates *all* other **not yet enacted** governance actions (whether or not they have been ratified),
 causing them to be immediately **dropped** without ever being enacted.
 Deposits for dropped actions will be returned immediately.
-
 
 ##### Order of enactment
 
@@ -592,8 +600,8 @@ Once ratified, actions are staged for enactment.
 All submitted governance actions will therefore either:
 
 1. be **ratified**, then **enacted**
-2. be **ratified**, yet **dropped** as a result of some higher priority action
-3. **expire** after a number of epochs
+2. be **dropped** as a result of a successful _Motion of no-confidence_
+3. or **expire** after a number of epochs
 
 In all of those cases, deposits are returned immediately.
 
@@ -602,7 +610,7 @@ Some actions will be enacted _immediately_ (i.e. at the same epoch boundary they
 | Governance action type         | Enactment           |
 | :--                            | :--                 |
 | 1. Motion of no-confidence     | Immediate           |
-| 2. New committee/quorum        | Immediate           |
+| 2. New committee/threshold     | Immediate           |
 | 3. Update to the Constitution  | Immediate           |
 | 4. Hard-fork initiation        | Next epoch boundary |
 | 5. Protocol parameter changes  | Next epoch boundary |
@@ -627,7 +635,7 @@ In addition, each action will include some elements that are specific to its typ
 | Governance action type         | Additional data                                               |
 | :--                            | :--                                                           |
 | 1. Motion of no-confidence     | None                                                          |
-| 2. New committee/quorum        | The set of verification key hash digests and a quorum number  |
+| 2. New committee/threshold     | The set of verification key hash digests and a fraction       |
 | 3. Update to the Constitution  | A hash digest of the Constitution document                    |
 | 4. Hard-fork initiation        | The new (greater) major protocol version                      |
 | 5. Protocol parameters changes | The changed parameters                                        |
@@ -691,6 +699,7 @@ The **governance group** consists of all the new protocol parameters that are in
 * governance action expiration
 * governance action deposit (`govDeposit`)
 * DRep deposit amount (`drepDeposit`)
+* DRep activity period (`drepActivity`)
 
 <!-- TODO:
   - Decide on the initial values for the new governance parameters
@@ -774,7 +783,7 @@ We define a number of new terms related to voting stake:
 + [The purpose of the DReps](#the-purpose-of-the-dreps)
 + [Ratification requirements table](#ratification-requirements-table)
 + [Motion of no-confidence](#motion-of-no-confidence)
-+ [New committee/quorum (state of no-confidence)](#new-committeequorum-state-of-no-confidence)
++ [New committee/threshold (state of no-confidence)](#new-committeethreshold-state-of-no-confidence)
 + [The versatility of the info governance action](#the-versatility-of-the-info-governance-action)
 + [Hard-fork initiation](#hard-fork-initiation)
 + [New metadata structures](#new-metadata-structures)
@@ -851,10 +860,10 @@ also a good block producer, and SPOs can choose to represent Ada holders or not.
 
 The requirements in the [ratification requirement table](#requirements) are explained here.
 Most of the governance actions have the same kind of requirements:
-the constitutional committee must reach quorum and the DReps must reach a sufficient number of
+the constitutional committee and the DReps must reach a sufficient number of
 'Yes' votes.
 This includes these actions:
-* New committee/quorum (normal state)
+* New committee/threshold (normal state)
 * Update to the Constitution
 * Protocol parameter changes
 * Treasury withdrawal
@@ -866,7 +875,7 @@ current constitutional committee, and hence the constitutional committee should 
 be included in this type of governance action.
 In this situation, the SPOs and the DReps are left to represent the will of the community.
 
-### New committee/quorum (state of no-confidence)
+### New committee/threshold (state of no-confidence)
 
 Similar to the motion of no-confidence, electing a constitutional committee
 depends on both the SPOs and the DReps to represent the will of the community.
@@ -1038,9 +1047,9 @@ We will need to be careful how we bootstrap this fledgling government.  All the 
 that are involved will need ample time to register themselves and to become familiar with the process.
 
 Special provisions will apply in the initial bootstrap phase.
-Firstly, during the bootstrap phase, a quorum vote from the constitutional committee
+Firstly, during the bootstrap phase, a vote from the constitutional committee
 is sufficient to change the protocol parameters.
-Secondly, during the bootstrap phase, a quorum vote from the constitutional committee,
+Secondly, during the bootstrap phase, a vote from the constitutional committee,
 together with a sufficient SPO vote, is sufficient to initiate a hard fork.
 No other actions are possible during the bootstrap phase.
 
