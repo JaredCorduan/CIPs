@@ -43,7 +43,7 @@ We also introduce three distinct governance bodies that have specific functions 
 2. a group of delegate representatives (henceforth called **DReps**)
 3. the stake pool operators (henceforth called **SPOs**)
 
-Every governance action must be ratified by two of these three governance bodies using their on-chain **votes**.
+Every governance action must be ratified by at least two of these three governance bodies using their on-chain **votes**.
 The type of action and the state of the governance system determines which bodies must ratify it.
 
 Ratified actions are then **enacted** on-chain, following a set of well-defined rules.
@@ -296,20 +296,27 @@ can also be varied by the governance action.
 This gives a great deal of flexibility to the composition of the committee.
 In particular, it is possible to elect an empty committee if the community wishes to abolish the constitutional committee entirely. Note that this is different from a state of no-confidence and still constitutes a governance system capable of enacting proposals.
 
+There will be a new protocol parameter for the minimal size of the committee,
+itself a nonnegative number.
+
 #### Term limits
 
-Each newly elected constitutional committee will have a term limit.
-The system will automatically enter a state of no-confidence when the term limit for the constitutional
-committee expires.  This limit is a governance protocol parameter, which specifies the maximum number of epochs
-during which the committee can ratify governance actions.  When the committee term limit expires, all governance
-actions will be **dropped** and the protocol enters a state of no confidence.
-This means that the committee should plan for its own replacement if it wishes to avoid disruption.
+Each newly elected constitutional committee will have per-member term limits.
+Per-member limits allow for a rotation scheme, such as a third of the committee
+expiring every year.
+Expired members can no longer vote.
+Member can also willingly resign early, which will be marked on-chain as an expired member.
 
-The term limit will reset whenever the  "New constitutional committee and/or threshold" governance action is enacted, even if the same committee is re-elected
-and the threshold remains unchanged.  This allows Ada holders to confirm their confidence in the committee if they wish.
-Note that the term limit is calculated at the point the committee is elected.  Any change in the underlying protocol
-parameter only affects the term that applies to future committees, and does not change the term of the current committee.
+The system will automatically enter a state of no-confidence when the number of non-expired
+committee members falls below the minimal size of the committee.
+For example, a committee of size five with a quorum of three and two expired members can still
+pass governance actions if all of non-expired members vote `Yes`.
+However, if one more member expires then the system enters a state of no-confidence,
+since the two remaining members are not enough to meet quorum.
 
+The maximum term limit is a governance protocol parameter, specified as a number of epochs.
+During a state of no-confidence, no action can be ratified,
+so the committee should plan for its own replacement if it wishes to avoid disruption.
 
 <!--------------------------- Constitutional committee ------------------------>
 <!---------------------------           DReps          ------------------------>
@@ -350,7 +357,12 @@ that will vote on their behalf.  In addition, two pre-defined DRep options are a
 
 
 > **Note**
-> Any Ada holder may register their stake credential as a DRep and delegate to themselves if they wish to actively participate in
+> The pre-defined DReps do not cast votes inside of transactions, their behavior is accounted for at the protocol level.
+> The `Abstain` DRep may be chosen for a variety of reasons, including the desire to not
+> participate in the governance system.
+
+> **Note**
+> Any Ada holder may register themselves as a DRep and delegate to themselves if they wish to actively participate in
 > voting.
 
 #### Registered DReps
@@ -379,6 +391,7 @@ vote delegation certificates.
 DRep registration certificates include:
 
 * a DRep ID
+* a deposit
 * an anchor
 
 An **anchor** is a pair of:
@@ -405,6 +418,11 @@ Vote delegation certificates include:
 
 * the DRep ID to which the stake should be delegated
 * the stake credential for the delegator
+
+> **Note**
+>
+> DRep delelagion always maps a stake credential to a DRep credential.
+> This means that a DRep cannot delegate voting stake to another DRep.
 
 ##### Certificate authorization schemes
 
@@ -535,7 +553,7 @@ The following table details the ratification requirements for each governance ac
 | Governance action type                                            | CC   | DReps    | SPOs     |
 | :---                                                              | :--- | :---     | :---     |
 | 1. Motion of no-confidence                                        | \-   | $P_1$    | $Q_1$    |
-| 2<sub>a</sub>. New committee/threshold (_normal state_)           | ✓    | $P_{2a}$ | \-       |
+| 2<sub>a</sub>. New committee/threshold (_normal state_)           | \-   | $P_{2a}$ | $Q_{2a}$ |
 | 2<sub>b</sub>. New committee/threshold (_state of no-confidence_) | \-   | $P_{2b}$ | $Q_{2b}$ |
 | 3. Update to the Constitution                                     | ✓    | $P_3$    | \-       |
 | 4. Hard-fork initiation                                           | ✓    | $P_4$    | $Q_4$    |
@@ -700,6 +718,8 @@ The **governance group** consists of all the new protocol parameters that are in
 * governance action deposit (`govDeposit`)
 * DRep deposit amount (`drepDeposit`)
 * DRep activity period (`drepActivity`)
+* minimal constitutional committee size
+* maximum term limit (in epochs) of the constitutional committee
 
 <!-- TODO:
   - Decide on the initial values for the new governance parameters
@@ -1053,9 +1073,16 @@ Secondly, during the bootstrap phase, a vote from the constitutional committee,
 together with a sufficient SPO vote, is sufficient to initiate a hard fork.
 No other actions are possible during the bootstrap phase.
 
-The bootstrap phase ends when **either** of the following occurs:
-1. a sufficient amount of stake is delegated to DReps
-2. a given number of epochs has passed (likely to be a number of months after the hard fork)
+The bootstrap phase ends when a given number of epochs has elapsed,
+as specified in the next ledger era configuration file.
+This is likely to be a number of months after the hard fork.
+
+Moreover, there will be an interim Constitutional committee,
+also specified in the next ledger era configuration file,
+whose term limits will be set to expire when the bootstrap phase ends.
+The rotational schedule of the first non-bootstrap committee could be included in the constitution itself.
+Note, however, that since the constitutional committee never votes on new committees,
+it cannot actually enforce the rotation.
 
 #### Final safety measure, post bootstrapping
 
