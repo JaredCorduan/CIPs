@@ -275,13 +275,11 @@ The constitutional committee will use a hot and cold key setup, similar to the e
 
 #### Replacing the constitutional committee
 
-The constitutional committee can be replaced in one of two ways:
-
-* When in a **normal** state (i.e. a state of **confidence**), the committee can be replaced via a
-specific governance action ("New constitional committee", described below) that requires the approval of both the **current constitutional committee** and the **DReps**.
-
-* When in a state of **no-confidence**, the committee can also be replaced via the same governance action (action 2 below),
-but this instead requires the approval of both the **SPOs** and the **DReps**.
+The constitutional committee can be replaced via a specific governance action
+("New constitutional committee", described below) that requires the approval of both
+the **SPOs** and the **DReps**.
+The threshold for ratification might be different depending on if the governance is
+in a state of confidence or a state of no confidence.
 
 The new constitutional committee could, in principle, be identical to or partially overlap the outgoing committee as long as the action is properly ratified.
 This might happen, for example, if the electorate has collective confidence in all or part of the committee and wishes to extend its term of office.
@@ -421,7 +419,7 @@ Vote delegation certificates include:
 
 > **Note**
 >
-> DRep delelagion always maps a stake credential to a DRep credential.
+> DRep delegation always maps a stake credential to a DRep credential.
 > This means that a DRep cannot delegate voting stake to another DRep.
 
 ##### Certificate authorization schemes
