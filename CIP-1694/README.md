@@ -148,7 +148,7 @@ Properly authorized governance actions are applied on an epoch boundary (they ar
 
 One of the protocol parameters is sufficiently significant to merit special attention:
 changing the major protocol version enables Cardano to enact controlled hard forks.
-This type of protocol paramater update therefore has a special status, since stake pools
+This type of protocol parameter update therefore has a special status, since stake pools
 must upgrade their nodes so they can support the new protocol version once the hard fork is enacted.
 
 ### Shortcomings of the Shelley governance design
@@ -371,7 +371,12 @@ in addition to the current delegation to stake pools for block production.
 DRep delegation will mimic the existing stake delegation mechanisms (via on-chain certificates).
 Similarly, DRep registration will mimic the existing stake registration mechanisms.
 Additionally, registered DReps will need to vote regularly to still be considered active.
+Specifically, if a DRep does not submit any votes for `drepActivity`-many epochs, the DRep is considered inactive,
+where `drepActivity` is a new protocol paremater.
 Inactive DReps do not count towards the active voting stake anymore.
+The reason for marking DReps as inactive is so that DReps who stop participating but still have
+stake delegated to them do not eventually leave the system in a state where no governance
+action can pass.
 
 Registered DReps are identified by a credential that can be either:
 
@@ -390,7 +395,8 @@ DRep registration certificates include:
 
 * a DRep ID
 * a deposit
-* an anchor
+* a stake credential (for the deposit return)
+* an optional anchor
 
 An **anchor** is a pair of:
 
@@ -408,7 +414,11 @@ DRep retirement certificates include:
 
 * a DRep ID
 * the epoch number after which the DRep will retire
+* an optional anchor
 
+Note that a DRep is retired immediately upon the chain accepting a retirement certificate,
+and the deposit is returned via the usual transaction balancing
+(the same way that stake credential registration deposits are returned).
 
 ##### Vote delegation certificates
 
@@ -416,6 +426,7 @@ Vote delegation certificates include:
 
 * the DRep ID to which the stake should be delegated
 * the stake credential for the delegator
+* an optional anchor
 
 > **Note**
 >
@@ -491,7 +502,7 @@ for example, a motion of no confidence is enacted.
 | Action                                           | Description |
 | :---                                             | :--- |
 | 1. Motion of no-confidence                       | A motion to create a _state of no-confidence_ in the current constitutional committee |
-| 2. New constitutional committee and/or threshold | Changes to the members of the constitutional committee and/or to its signature threshold |
+| 2. New constitutional committee and/or threshold | Changes to the members of the constitutional committee and/or to its signature threshold and/or term limits|
 | 3. Updates to the Constitution                   | A modification to the off-chain Constitution, recorded as an on-chain hash of the text document |
 | 4. Hard-Fork[^2] Initiation                      | Triggers a non-backwards compatible upgrade of the network; requires a prior software upgrade |
 | 5. Protocol Parameter Changes                    | Any change to one or more updatable protocol parameters, excluding changes to major protocol versions ("hard forks") |
@@ -560,10 +571,12 @@ The following table details the ratification requirements for each governance ac
 | 5<sub>c</sub>. Protocol parameter changes, technical group        | ✓    | $P_{5c}$ | \-       |
 | 5<sub>d</sub>. Protocol parameter changes, governance group       | ✓    | $P_{5d}$ | \-       |
 | 6. Treasury withdrawal                                            | ✓    | $P_6$    | \-       |
-| 7. Info                                                           | ✓    | $P_7$    | \-       |
+| 7. Info                                                           | ✓    | $100$    | $100$    |
 
 Each of these thresholds is a governance parameter.
 The initial thresholds should be chosen by the Cardano community as a whole.
+The two thresholds for the Info action are set to 100% since setting it any lower
+would result in not being able to poll above the threshold.
 
 > **Note**
 > It may make sense for some or all thresholds to be adaptive with respect to the Lovelace that is actively registered to vote.
@@ -641,7 +654,7 @@ Every governance action will include the following:
 
 * a deposit amount (recorded since the amount of the deposit is an updatable protocol parameter)
 * a reward address to receive the deposit when it is repaid
-* an anchor for any metadata that is needed to justify the action
+* an optional anchor for any metadata that is needed to justify the action
 * a hash digest value to prevent collisions with competing actions of the same type (as described earlier)
 
 <!-- TODO: Provide a CBOR specification in the annexe for these new on-chain entities -->
@@ -651,7 +664,7 @@ In addition, each action will include some elements that are specific to its typ
 | Governance action type         | Additional data                                               |
 | :--                            | :--                                                           |
 | 1. Motion of no-confidence     | None                                                          |
-| 2. New committee/threshold     | The set of verification key hash digests and a fraction       |
+| 2. New committee/threshold     | The set of verification key hash digests (members to be removed), a map of verification key hash digests to epoch numbers (new members and their term limit),  and a fraction (quorum threshold) |
 | 3. Update to the Constitution  | A hash digest of the Constitution document                    |
 | 4. Hard-fork initiation        | The new (greater) major protocol version                      |
 | 5. Protocol parameters changes | The changed parameters                                        |
@@ -737,7 +750,7 @@ Each vote transaction consists of the following:
 * a governance action ID
 * a role - constitutional committee member, DRep, or SPO
 * a governance credential witness for the role
-* an anchor (as defined above) for information that is relevant to the vote
+* an opitional anchor (as defined above) for information that is relevant to the vote
 * a 'Yes'/'No'/'Abstain' vote
 
 For SPOs and DReps, the number of votes that are cast (whether 'Yes', 'No' or 'Abstain') is proportional to the Lovelace that is delegated to them at the point the
